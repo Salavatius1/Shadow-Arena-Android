@@ -18,7 +18,7 @@ jobs:
             git zip unzip openjdk-17-jdk \
             python3-pip python3-venv \
             autoconf libtool pkg-config \
-            zlib1g-dev libncurses5-dev \
+            zlib1g-dev libncurses-dev \
             libffi-dev libssl-dev \
             cmake
 
@@ -31,9 +31,24 @@ jobs:
         run: |
           export PATH="$HOME/.local/bin:$PATH"
           export BUILDOZER_WARN_ON_ROOT=1
-          yes | buildozer android debug
+          set -o pipefail
+          yes | buildozer android debug > build.log 2>&1
+
+      - name: Show last errors
+        if: failure()
+        run: |
+          tail -n 100 build.log || true
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          if-no-files-found: warn
 
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: Shadow-Arena-Android
