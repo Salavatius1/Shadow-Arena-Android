@@ -27,11 +27,10 @@ jobs:
           python3 -m pip install --user \
             buildozer Cython==0.29.34
 
-      -       - name: Build APK
+      - name: Build APK
         run: |
           export PATH="$HOME/.local/bin:$PATH"
-          mkdir -p "$HOME/.buildozer/android/platform/android-sdk"
-          yes | buildozer android debug || true
+          export BUILDOZER_WARN_ON_ROOT=1
           yes | buildozer android debug
 
       - name: Upload APK
