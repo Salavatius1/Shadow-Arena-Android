@@ -28,16 +28,21 @@ jobs:
             buildozer Cython==0.29.34
 
       - name: Build APK
+        shell: bash
         run: |
           export PATH="$HOME/.local/bin:$PATH"
           export BUILDOZER_WARN_ON_ROOT=1
-          set -o pipefail
-          yes | buildozer android debug > build.log 2>&1
 
-      - name: Show last errors
-        if: failure()
+          set -o pipefail
+
+          buildozer -v android debug > build.log 2>&1
+        continue-on-error: true
+
+      - name: Show build result
+        if: always()
         run: |
-          tail -n 100 build.log || true
+          echo "===== LAST 150 LOG LINES ====="
+          tail -n 150 build.log || true
 
       - name: Upload build log
         if: always()
@@ -48,8 +53,18 @@ jobs:
           if-no-files-found: warn
 
       - name: Upload APK
-        if: success()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: Shadow-Arena-Android
           path: bin/*.apk
+          if-no-files-found: warn
+
+      - name: Check APK
+        run: |
+          if ! compgen -G "bin/*.apk" > /dev/null; then
+            echo "ERROR: APK was not created!"
+            exit 1
+          fi
+
+          echo "SUCCESS: APK created!"
